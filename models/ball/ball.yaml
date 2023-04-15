@@ -1,0 +1,4 @@
+train: C:/Users/darre/PycharmProjects/tkinter/models/ball
+val: C:/Users/darre/PycharmProjects/tkinter/models/ball
+nc: 1
+names: ['Ball']

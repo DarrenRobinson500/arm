@@ -1,0 +1,12 @@
+tkinter
+    data
+        clash                       model.source_folder
+            images                  model.source_folder_images
+            labels                  model.source_folder_labels
+            list_of_labels.txt      model.list_of_labels_path
+    model
+        clash                       model.model_folder
+            images                  model.model_folder_images
+            labels                  model.model_folder_labels
+            clash-pt                model.model_path
+            clash.yaml              model.yaml_path

@@ -1,0 +1,8 @@
+0 white air_defence 52 50
+1 blue cannon 37 67
+2 yellow archer 40 45
+3 white TH8 70 70
+4 white TH9 70 70
+5 white TH7 70 70
+6 white TH6 70 70
+7 white TH10 70 70

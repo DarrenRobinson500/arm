@@ -1,0 +1,4 @@
+train: C:/Users/darre/PycharmProjects/tkinter/models/clash
+val: C:/Users/darre/PycharmProjects/tkinter/models/clash
+nc: 8
+names: ['air_defence', 'cannon', 'archer', 'TH8', 'TH9', 'TH7', 'TH6', 'TH10']

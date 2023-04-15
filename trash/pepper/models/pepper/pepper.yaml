@@ -1,0 +1,4 @@
+train: C:/Users/darre/PycharmProjects/tkinter/models/pepper
+val: C:/Users/darre/PycharmProjects/tkinter/models/pepper
+nc: 2
+names: ['Pepper', 'Bowl']
