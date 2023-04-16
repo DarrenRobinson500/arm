@@ -1,3 +1,4 @@
+from tkinter import *
 import cv2
 
 cap0 = cv2.VideoCapture(0)
