@@ -117,12 +117,15 @@ class Model:
             if filename == "done": continue
             source = self.video_folder + "/" + filename
             cap = cv2.VideoCapture(source)
+            length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            cycle = length // 50
             count = 0
             while True:
-                success, frame = cap.read()
+                for x in range(cycle):
+                    success, frame = cap.read()
                 if not success: break
                 frame = cv2.resize(frame, (224, 224))
-                filename = f"{self.source_folder_images}/{video_count}_{count:03d}.jpg"
+                filename = f"{self.source_folder_images}/{video_count}_{count:03d}.png"
                 cv2.imwrite(filename, frame)
                 count += 1
             cap.release()
@@ -144,6 +147,10 @@ class Model:
 
     def get_image(self, number):
         result = next((x for x in self.images if x.number == number), None)
+        return result
+
+    def get_image_name(self, name):
+        result = next((x for x in self.images if x.name == name), None)
         return result
 
     def get_next_image(self, image):
@@ -247,6 +254,23 @@ class Model:
         print(f"Saved {source_model} to {destination}")
         self.save_model_details(source_csv)
 
+    def get_next_save_file(self):
+        files = os.listdir(self.source_folder_images)
+        max = -1
+        for file in files:
+            if file[0] == "x":
+                result = file[2:-4]
+                result = int(result)
+                if result > max: max = result
+                try:
+                    result = int(result)
+                    if result > max: max = result
+                except:
+                    pass
+        return f"{self.source_folder_images}/x_{max + 1}.png"
+
+
+
     def exists(self):
         return os.path.exists(self.model_path)
 
@@ -266,7 +290,7 @@ class Model:
             image.box_list = []
             self.boxes(image)
             for id, x1, y1, x2, y2 in image.box_list:
-                line = f"{image.number}, {id}, {x1}, {y1}, {x2}, {y2}"
+                line = f"{image.name}, {id}, {x1}, {y1}, {x2}, {y2}"
                 f.write(f"{line}\n")
         f.close()
 
@@ -277,28 +301,47 @@ class Model:
         for line in f:
             line = line.strip()
 
-            image_number, id, x1, y1, x2, y2 = line.split(",")
-            image = self.get_image(int(image_number))
+            image_name, id, x1, y1, x2, y2 = line.split(",")
+            image = self.get_image_name(image_name)
             # print(image, image_number, id, x1, y1, x2, y2)
             if image:
                 image.box_list.append((int(id), int(x1), int(y1), int(x2), int(y2)))
 
     def boxes(self, image):
         if not self.exists(): return []
+        if len(self.images) == 0: return []
+        if image is None: return []
+        # print("Boxes:", self.images)
         if len(image.box_list) > 0:
             return image.box_list
-        print("Boxes", image)
+        # print("Boxes", image)
         model = YOLO(self.model_path)
-        boxes = model(image.image_cv2)[0].boxes.xyxy.cpu().numpy()
-        confidences = model(image.image_cv2)[0].boxes.conf.cpu().numpy()
-        class_ids = model(image.image_cv2)[0].boxes.cls.cpu().numpy().astype(int)
+        result = model(image.image_cv2)[0].boxes
+        boxes = result.xyxy.cpu().numpy()
+        confidences = result.conf.cpu().numpy()
+        class_ids = result.cls.cpu().numpy().astype(int)
         image.box_list = []
         for box, confidence, class_id in zip(boxes, confidences, class_ids):
-            if confidence > 0.50:
+            if confidence > 0.40:
                 x1, y1, x2, y2 = integers(box)
                 w, h = x2 - x1, y2 - y1
                 image.box_list.append((class_id, x1 + w // 2, y1 + h // 2, x2 + w // 2, y2 + h // 2))
         return image.box_list
+
+    def boxes_live(self, image):
+        model = YOLO(self.model_path)
+        result = model(image)[0].boxes
+
+        boxes = result.xyxy.cpu().numpy()
+        confidences = result.conf.cpu().numpy()
+        class_ids = result.cls.cpu().numpy().astype(int)
+        box_list = []
+        for box, confidence, class_id in zip(boxes, confidences, class_ids):
+            if confidence > 0.50:
+                x1, y1, x2, y2 = integers(box)
+                w, h = x2 - x1, y2 - y1
+                box_list.append((class_id, x1 + w // 2, y1 + h // 2, x2 + w // 2, y2 + h // 2))
+        return box_list
 
     # def boxes(self, image):
     #     return []

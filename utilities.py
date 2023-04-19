@@ -1,6 +1,10 @@
 import ttkbootstrap as ttk
 import tkinter
 from tkinter import *
+import cv2
+from PIL import Image, ImageTk
+from PIL import Image, ImageTk
+
 
 trees = []
 
@@ -15,7 +19,7 @@ def write(widget, text):
 
 def new_tree(heading, frame, height, width, command_if_changed):
     f_tree = Frame(frame)
-    f_tree.pack(pady=10)
+    f_tree.pack(pady=10, padx=10)
     s_tree = Scrollbar(f_tree)
     s_tree.pack(side=RIGHT, fill=Y)
     tree = ttk.Treeview(f_tree, height=height, yscrollcommand=s_tree.set, selectmode="extended")

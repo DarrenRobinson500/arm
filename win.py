@@ -1,6 +1,5 @@
 from model import *
 from utilities import *
-from PIL import Image, ImageTk
 
 # Variables
 mouse_id = None
@@ -204,7 +203,7 @@ def refresh():
     v_video_name.set(current_model.available_videos())
     if current_image:
         v_image_name.set(current_image.name)
-    print("Refresh:", current_image.number)
+    # print("Refresh:", current_image.number)
 
 
 def add_label():
@@ -255,13 +254,29 @@ def remove_model():
     delete_model(current_model)
     current_model = models[0]
     refresh()
-    # pass
 
+# Frame 3b
+def delete_image():
+    selected_images = t_image.selection()
+    if len(selected_images) == 0: return
+    for image_number in selected_images:
+        image_number = int(image_number)
+        image = current_model.get_image(image_number)
+        filename = f"{current_model.source_folder_images}/{image.name}"
+        print(f"Delete image: {filename}")
+        current_model.images.remove(image)
+        os.remove(filename)
+    choose_first_image()
+    update_tree_images()
+    refresh()
+
+def next_unlabelled():
+    print("Next unlabelled")
 
 # Main Page
 root = ttk.Window(themename='darkly')
 root.title("Neural Network Trainer")
-root.geometry("1600x800+275+0")
+root.geometry("1680x880+275+0")
 blank_image = ImageTk.PhotoImage(Image.open("data/blank.png"))
 
 # root.attributes("-fullscreen", True)
@@ -270,6 +285,7 @@ blank_image = ImageTk.PhotoImage(Image.open("data/blank.png"))
 load_models()
 current_model = models[0]
 current_label = current_model.labels[0]
+current_image = None
 
 # Set up frames
 side_width = 130
@@ -305,12 +321,18 @@ frame_3a2 = Frame(frame_3a)
 frame_3b = Frame(frame_3)
 frame_3b1 = Frame(frame_3b)
 frame_3b2 = Frame(frame_3b)
-frame_3a.pack(side="left")
-frame_3b.pack(side="left")
-frame_3a1.pack(anchor=W)
+frame_3c = Frame(frame_3)
+frame_3c1 = Frame(frame_3c)
+frame_3c2 = Frame(frame_3c)
+frame_3a.pack(side="left", fill="both", expand=True)
+frame_3b.pack(side="left", fill="both", expand=True)
+frame_3c.pack(side="left", fill="both", expand=True)
+frame_3a1.pack(fill="both", expand=True)
 frame_3a2.pack(side="bottom")
-frame_3b1.pack(anchor=W)
+frame_3b1.pack(fill="both", expand=True)
 frame_3b2.pack(side="bottom")
+frame_3c1.pack(fill="both", expand=True)
+frame_3c2.pack(side="bottom")
 
 t_label = new_tree(heading="Label", frame=frame_a, height=10, width=150, command_if_changed=tree_changed_label)
 t_model = new_tree(heading="Model", frame=frame_a, height=10, width=150, command_if_changed=tree_changed_model)
@@ -330,12 +352,12 @@ l_image_name = Label(frame_0b, textvariable=v_image_name, font="Calibri 24 bold"
 l_image_name.pack(side="left")
 
 # Frame 1 - Canvases
-canvas = Canvas(frame_1, width=600, height=400, bg="white")
+canvas = Canvas(frame_1, width=640, height=480, bg="white")
 canvas.pack(side="left")
 canvas.bind('<Button-1>', mouse_click)
 canvas.bind('<Leave>', mouse_rectangle_clear)
 canvas.bind('<Motion>', mouse_move)
-canvas_m = Canvas(frame_1, width=600, height=400, bg="white")
+canvas_m = Canvas(frame_1, width=640, height=480, bg="white")
 canvas_m.pack(side="left")
 
 # Frame 2 = Previous and Next Image Buttons
@@ -372,17 +394,31 @@ v_model_name.set(current_model.name)
 buttons = [("Add Model", add_model), ("Train Model", train_model), ("Remove Model", remove_model)]
 button_row(buttons, frame_3b2)
 
+# Frame 3c - Images
+ttk.Label(frame_3c1, text="Images", style="primary", font=('Helvetica', 12)).grid(row=0, column=0)
+for count, text in enumerate(["Name:", ], 1):
+    Label(frame_3c1, text=text, pady=10, padx=10).grid(row=count, column=0, sticky=W)
+
+Label(frame_3c1, textvariable=v_image_name, pady=10, padx=10).grid(row=1, column=1, sticky=W)
+
+buttons = [("Delete Image", delete_image), ("Next Unlabelled", next_unlabelled)]
+button_row(buttons, frame_3c2)
+
 # Frame C - Images
 v_video_name = StringVar(root, value=current_model.available_videos())
 Label(frame_c, textvariable=v_video_name, pady=10).pack()
 
-if len(current_model.images) > 0:
-    current_image = current_model.images[0]
-else:
-    current_image = None
+def choose_first_image():
+    global current_image
+    if len(current_model.images) > 0:
+        current_image = current_model.images[0]
+    else:
+        current_image = None
+
+choose_first_image()
 
 f_image_tree = Frame(frame_c)
-f_image_tree.pack(pady=10)
+f_image_tree.pack(pady=10, padx=10)
 s_image_tree = Scrollbar(f_image_tree)
 s_image_tree.pack(side=RIGHT, fill=Y)
 
@@ -435,6 +471,8 @@ image_container_m = canvas_m.create_image(0, 0, anchor="nw")
 
 # Set the current label and populate entry fields
 set_current_label()
+set_current_image()
+
 write(e_name, current_label.name)
 write(e_colour, current_label.colour)
 v_label_w.set(current_label.width)
@@ -446,6 +484,7 @@ refresh()
 # root.style.theme_use("litera")
 
 # Sandpit Area
+# print(models[0].get_next_save_file())
 
 # Main loop
 root.mainloop()
